@@ -11,7 +11,7 @@ def clinic(ln):
   return re.match("^[0-9]",ln) or empty(ln)
 
 def district(ln):
-  return not (("Mutare Provincial Hospital" in ln) or ln.isupper() or re.match("^Name ",ln) or not empty(ln))
+  return not (("Mutare Provincial Hospital" in ln) or ("HOSPITAL" in ln) or re.match("^Name ",ln) or not empty(ln))
   
 columns = {
   "Name": {"filter":clinic, "selector":"text[left='135'][font='0']"},
@@ -56,10 +56,14 @@ def addattr(do,k,v):
 
 def add_districts(cs,districts):
   d=None
+  p=None
   for c in cs:
     if re.search("^1\.", c["Name"]):
       d=districts.next()
-    yield addattr(c,"District",d)
+      if d.isupper():
+        p=d
+        d=districts.next()
+    yield addattr(addattr(c,"Province",p),"District",d)
 
 
 
@@ -73,7 +77,7 @@ if __name__=="__main__":
   root=get_root("../data/provincila and district hospitals.pdf")
   cs=get_columns(root)
   ds=get_districts(root)
-  keys=["Name","Owner","Category","District"]
+  keys=["Name","Owner","Category","District","Province"]
   f=codecs.open("../data/provincial_and_district_hospitals.csv","wb","utf-8")
   f.write(",".join(keys))
   f.write("\n")
